@@ -118,12 +118,18 @@ def merge_instnm(
     
     # If "UNITID" was renamed to "UNITID - Unique identification number of the institution",
     # rename it back so we can merge on 'UNITID' directly.
-    old_unitid_col = "UNITID - Unique identification number of the institution"
-    if old_unitid_col in sfa_df.columns:
-        sfa_df.rename(columns={old_unitid_col: "UNITID"}, inplace=True)
-        print(f"Renamed '{old_unitid_col}' back to 'UNITID' for merging.")
+    # Identify the UNITID column more robustly
+    if 'UNITID' not in sfa_df.columns:
+        unitid_candidates = [c for c in sfa_df.columns if c.upper().startswith("UNITID")]
+        if unitid_candidates:
+            old_name = unitid_candidates[0]
+            sfa_df.rename(columns={old_name: "UNITID"}, inplace=True)
+            print(f"Robustly identified '{old_name}' as 'UNITID' for merging.")
+        else:
+            print(f"Warning: No column starting with 'UNITID' found. Merge may fail.")
     else:
-        print(f"Warning: '{old_unitid_col}' column not found. Merge may fail if there's no 'UNITID' at all.")
+        # UNITID already exists, no need to search
+        pass
     
     # Ensure columns exist
     if 'UNITID' not in sfa_df.columns:
